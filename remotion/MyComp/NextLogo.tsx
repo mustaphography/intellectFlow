@@ -1,119 +1,71 @@
-import { evolvePath } from "@remotion/paths";
-import React, { useMemo } from "react";
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
-const mask: React.CSSProperties = {
-  maskType: "alpha",
+// Define your animation variants
+const imageVariants = {
+  hidden: { opacity: 0, y: 50 }, // initial vertical position
+  visible: {
+    opacity: 1,
+    y: 0, // end position for 'visible' state (moved upwards)
+    transition: {
+      duration: 1.5, // Duration for the 'visible' state transition
+      ease: "easeInOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: 50, // start moving back down before completely faded out
+    transition: {
+      opacity: {
+        duration: 1.5, // control the duration of the opacity transition independently
+        ease: "easeInOut",
+      },
+      y: {
+        duration: 1, // shorter duration means it will start moving before fade out completes
+        ease: "easeInOut",
+      },
+    },
+  },
 };
 
-const nStroke =
-  "M149.508 157.52L69.142 54H54V125.97H66.1136V69.3836L139.999 164.845C143.333 162.614 146.509 160.165 149.508 157.52Z";
+export const NextLogo: React.FC = () => {
+  // Define your image URL.
+  const imageUrl = "/logo.png"; // <-- Update this path
 
-export const NextLogo: React.FC<{
-  outProgress: number;
-}> = ({ outProgress }) => {
-  const { fps } = useVideoConfig();
-  const frame = useCurrentFrame();
+  // State variable to control the animation state
+  const [animationState, setAnimationState] = useState("hidden");
 
-  const evolve1 = spring({
-    fps,
-    frame,
-    config: {
-      damping: 200,
-    },
-  });
-  const evolve2 = spring({
-    fps,
-    frame: frame - 15,
-    config: {
-      damping: 200,
-    },
-  });
-  const evolve3 = spring({
-    fps,
-    frame: frame - 30,
-    config: {
-      damping: 200,
-      mass: 3,
-    },
-    durationInFrames: 30,
-  });
+  // Use an effect to change the animation state after a certain time has passed
+  useEffect(() => {
+    // Change to the 'visible' state shortly after mounting
+    const visibleTimeout = setTimeout(() => {
+      setAnimationState("visible");
+    }, 500); // starts the 'visible' animation 500ms after mount
 
-  const style: React.CSSProperties = useMemo(() => {
-    return {
-      height: 140,
-      borderRadius: 70,
-      scale: String(1 - outProgress),
+    // Change to the 'exit' state after some time
+    const exitTimeout = setTimeout(() => {
+      setAnimationState("exit");
+    }, 4000); // starts the 'exit' animation 4 seconds after mount
+
+    // Clean up the timeouts if the component is unmounted before they complete
+    return () => {
+      clearTimeout(visibleTimeout);
+      clearTimeout(exitTimeout);
     };
-  }, [outProgress]);
-
-  const firstPath = `M 60.0568 54 v 71.97`;
-  const secondPath = `M 63.47956 56.17496 L 144.7535 161.1825`;
-  const thirdPath = `M 121 54 L 121 126`;
-
-  const evolution1 = evolvePath(evolve1, firstPath);
-  const evolution2 = evolvePath(evolve2, secondPath);
-  const evolution3 = evolvePath(
-    interpolate(evolve3, [0, 1], [0, 0.7]),
-    thirdPath
-  );
+  }, []); // The empty dependency array means this effect runs once when the component mounts
 
   return (
-    <svg style={style} fill="none" viewBox="0 0 180 180">
-      <mask height="180" id="mask" style={mask} width="180" x="0" y="0">
-        <circle cx="90" cy="90" fill="black" r="90"></circle>
-      </mask>
-      <mask id="n-mask" style={mask}>
-        <path d={nStroke} fill="black"></path>
-      </mask>
-      <g mask="url(#mask)">
-        <circle cx="90" cy="90" fill="black" r="90"></circle>
-        <g stroke="url(#gradient0)" mask="url(#n-mask)">
-          <path
-            strokeWidth="12.1136"
-            d={firstPath}
-            strokeDasharray={evolution1.strokeDasharray}
-            strokeDashoffset={evolution1.strokeDashoffset}
-          ></path>
-          <path
-            strokeWidth={12.1136}
-            d={secondPath}
-            strokeDasharray={evolution2.strokeDasharray}
-            strokeDashoffset={evolution2.strokeDashoffset}
-          ></path>
-        </g>
-        <path
-          stroke="url(#gradient1)"
-          d={thirdPath}
-          strokeDasharray={evolution3.strokeDasharray}
-          strokeDashoffset={evolution3.strokeDashoffset}
-          strokeWidth="12"
-        ></path>
-      </g>
-      <defs>
-        <linearGradient
-          gradientUnits="userSpaceOnUse"
-          id="gradient0"
-          x1="109"
-          x2="144.5"
-          y1="116.5"
-          y2="160.5"
-        >
-          <stop stopColor="white"></stop>
-          <stop offset="1" stopColor="white" stopOpacity="0"></stop>
-        </linearGradient>
-        <linearGradient
-          gradientUnits="userSpaceOnUse"
-          id="gradient1"
-          x1="121"
-          x2="120.799"
-          y1="54"
-          y2="106.875"
-        >
-          <stop stopColor="white"></stop>
-          <stop offset="1" stopColor="white" stopOpacity="0"></stop>
-        </linearGradient>
-      </defs>
-    </svg>
+    <motion.img
+      src={imageUrl}
+      initial="hidden"
+      animate={animationState} // This is now controlled by the state variable
+      variants={imageVariants}
+      alt="Your Logo"
+      style={{
+        width: "500px",
+        height: "500px",
+        position: "absolute", // Consider positioning if it's not laid out as expected
+      }}
+    />
   );
 };

@@ -15,6 +15,8 @@ import { z } from "zod";
 import { RenderControls } from "../components/RenderControls";
 import { Tips } from "../components/Tips/Tips";
 import { Spacing } from "../components/Spacing";
+import ToastProvider from "../providers/toast.provider";
+import "react-toastify/dist/ReactToastify.css";
 
 const container: React.CSSProperties = {
   maxWidth: 768,
@@ -36,10 +38,14 @@ const player: React.CSSProperties = {
 
 const Home: NextPage = () => {
   const [text, setText] = useState<string>(defaultMyCompProps.title);
+  const [prompt, setPrompt] = useState<string>("");
+  const [content, setContent] = useState<string>("");
+  const editorRef = React.useRef(null);
 
   const inputProps: z.infer<typeof CompositionProps> = useMemo(() => {
     return {
       title: text,
+      content: content,
     };
   }, [text]);
 
@@ -54,32 +60,38 @@ const Home: NextPage = () => {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div style={container}>
-        <div className="cinematics" style={outer}>
-          <Player
-            component={Main}
+      <ToastProvider>
+        <div style={container}>
+          <div className="cinematics" style={outer}>
+            <Player
+              component={Main}
+              inputProps={inputProps}
+              durationInFrames={DURATION_IN_FRAMES}
+              fps={VIDEO_FPS}
+              compositionHeight={VIDEO_HEIGHT}
+              compositionWidth={VIDEO_WIDTH}
+              style={player}
+              controls
+              autoPlay
+              loop
+            />
+          </div>
+          <RenderControls
+            text={text}
+            setText={setText}
             inputProps={inputProps}
-            durationInFrames={DURATION_IN_FRAMES}
-            fps={VIDEO_FPS}
-            compositionHeight={VIDEO_HEIGHT}
-            compositionWidth={VIDEO_WIDTH}
-            style={player}
-            controls
-            autoPlay
-            loop
-          />
+            prompt={prompt}
+            setPrompt={setPrompt}
+            content={content}
+            setContent={setContent}
+          ></RenderControls>
+          <Spacing></Spacing>
+          <Spacing></Spacing>
+          <Spacing></Spacing>
+          <Spacing></Spacing>
+          <Tips></Tips>
         </div>
-        <RenderControls
-          text={text}
-          setText={setText}
-          inputProps={inputProps}
-        ></RenderControls>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Tips></Tips>
-      </div>
+      </ToastProvider>
     </div>
   );
 };

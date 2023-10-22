@@ -9,9 +9,10 @@ import {
 import { CompositionProps } from "../../types/constants";
 import { NextLogo } from "./NextLogo";
 import { loadFont, fontFamily } from "@remotion/google-fonts/Inter";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Rings } from "./Rings";
 import { TextFade } from "./TextFade";
+import { callGpt4 } from "../openaiService";
 
 loadFont();
 
@@ -24,7 +25,7 @@ const logo: React.CSSProperties = {
   alignItems: "center",
 };
 
-export const Main = ({ title }: z.infer<typeof CompositionProps>) => {
+export const Main = ({ title, content }: z.infer<typeof CompositionProps>) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -45,17 +46,22 @@ export const Main = ({ title }: z.infer<typeof CompositionProps>) => {
     return { fontFamily, fontSize: 70 };
   }, []);
 
+  const contentStyle: React.CSSProperties = useMemo(() => {
+    return { fontFamily, fontSize: 30 };
+  }, []);
+
   return (
     <AbsoluteFill style={container}>
       <Sequence durationInFrames={transitionStart + transitionDuration}>
         <Rings outProgress={logoOut}></Rings>
         <AbsoluteFill style={logo}>
-          <NextLogo outProgress={logoOut}></NextLogo>
+          <NextLogo></NextLogo> {/* Updated line */}
         </AbsoluteFill>
       </Sequence>
       <Sequence from={transitionStart + transitionDuration / 2}>
         <TextFade>
           <h1 style={titleStyle}>{title}</h1>
+          <p style={contentStyle}>{content}</p>
         </TextFade>
       </Sequence>
     </AbsoluteFill>
